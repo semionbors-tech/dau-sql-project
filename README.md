@@ -1,44 +1,41 @@
-# dau-sql-project
-Расчёт DAU (Daily Active Users) для образовательной платформы
-# Проект: Расчёт DAU (Daily Active Users) для образовательной платформы
+# DAU Analysis for GitHub-like App
 
-## Описание задачи(TASK DESCRIPTION)
-Рассчитать DAU за первый квартал 2025 года, чтобы определить динамику активности пользователей и эффективность маркетинговых коммуникаций.
+Цель проекта — рассчитать Daily Active Users (DAU) для гипотетического веб-приложения (аналог GitHub) и провести базовый анализ.
 
-##  Стек
-- **SQL** (SQLite)
-- **Оконные функции** (MAX OVER)
-- **Рекурсивные запросы** (WITH RECURSIVE)
-- **Визуализация** (Python, Matplotlib)
+## Используемые технологии
+- PostgreSQL 16
+- DBeaver (для выполнения запросов)
+- SQL
 
-```sql
-WITH RECURSIVE calendar AS (
-    SELECT DATE('2025-01-01') AS date_from_calendar
-    UNION ALL
-    SELECT DATE(date_from_calendar, '+1 day')
-    FROM calendar
-    WHERE date_from_calendar < DATE('2025-03-31')
-),
-daily_active_users AS (
-    SELECT
-        DATE(u.entry_at) AS ymd_from_entry_at,
-        COUNT(DISTINCT u.user_id) AS dau
-    FROM userentry u
-    WHERE DATE(u.entry_at) BETWEEN '2025-01-01' AND '2025-03-31'
-    GROUP BY DATE(u.entry_at)
-)
-SELECT
-    c.date_from_calendar,
-    COALESCE(d.dau, 0) AS daily_active_users_cnt,
-    MAX(COALESCE(d.dau, 0)) OVER (ORDER BY c.date_from_calendar) AS max_dau_cnt,
-    COALESCE(d.dau, 0) - MAX(COALESCE(d.dau, 0)) OVER (ORDER BY c.date_from_calendar) AS diff_dau
-FROM calendar c
-LEFT JOIN daily_active_users d ON c.date_from_calendar = d.ymd_from_entry_at
-ORDER BY c.date_from_calendar;
-За январь-март 2025 года DAU плавно растёт.
+## Структура данных
+Таблица `user_actions` содержит логи действий пользователей:
+- `id` — уникальный идентификатор записи
+- `user_id` — идентификатор пользователя
+- `action_date` — дата совершения действия
+- `action_type` — тип действия (commit, issue, pull_request, comment)
+- `repo_id` — идентификатор репозитория
+- `duration_seconds` — продолжительность действия (в секундах)
 
-Максимальное значение достигнуто в середине февраля (28 пользователей).
+## Как воспроизвести
+1. Установите PostgreSQL.
+2. Откройте DBeaver и подключитесь к базе данных.
+3. Выполните скрипты в папке `sql/` по порядку.
+4. Запустите запросы из `03_dau_query.sql`, `04_dau_7d_avg.sql` и т.д.
 
-Падение в конце января и в начале марта требует дополнительного исследования (вероятно, технические работы или снижение маркетинговой активности).
+## Результаты
+Примерная таблица DAU по дням и скользящее среднее за 7 дней (на основе сгенерированных данных):
 
-С помощью оконных функций (MAX OVER) я отследил динамику отставания от рекордного показателя.
+| day        | dau | dau_7d_avg |
+|------------|-----|------------|
+| 2026-08-18 | 96  | 95.57      |
+| 2026-08-19 | 97  | 96.29      |
+| ...        | ... | ...        |
+
+Более детальные результаты можно посмотреть в папке `output/`.
+
+## Выводы
+- Пиковые значения DAU достигались в определённые дни.
+- Скользящее среднее сглаживает колебания и показывает стабильный уровень активности.
+
+## Контакты
+Если у вас есть вопросы, свяжитесь со мной: [ваш email или ссылка на Telegram].
